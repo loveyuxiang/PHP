@@ -1,0 +1,152 @@
+<html>
+<head>
+	<title></title>
+	<style>
+		#box{
+			width:100%;
+			/*background:green;*/
+		}
+		#box1{
+			width:800px;
+			margin:auto;
+			/*background:red;*/
+		}
+		textarea{
+			resize: none;
+		}
+		#liuyan textarea{
+			width:678px;
+			height:110px;
+		}
+		#liuyan input{
+			width:678px;
+		}
+	</style>
+	<script src="__PUBLIC__/js/jquery-1.8.3.js"></script>
+</head>
+
+<body>
+	<div id="box">
+		<div id="box1">
+			<table width="800" id="tab">
+				<tr>
+					<td colspan="6">
+						<center><h1>留言板</h1></center>
+					</td>
+				</tr>
+				<tr>
+					<td width="5%">id</td>
+					<td width="10%">留言标题</td>
+					<td width="10%">留言人</td>
+					<td width="10%">ip地址</td>
+					<td width="10%">添加时间</td>
+					<td width="50%">留言内容</td>
+					<td width="5%">操作</td>
+				</tr>
+				<foreach name="data" item="sj" key="k">
+					<tr>
+						<td id="sid">{$sj.id}</td>
+						<td>{$sj.title}</td>
+						<td>{$sj.author}</td>
+						<td>{$sj.ip}</td>
+						<td>{$sj.addtime}</td>
+						<td><textarea disabled>{$sj.content}</textarea></td>
+						<td><input type="button" onclick="del(this)" value="删除"></td>
+					</tr>
+				</foreach>
+			</table>
+			<table border="1" width="800" id="liuyan">
+				<tr>
+					<td colspan="3" width="15%">
+						留言标题
+					</td>
+					<td colspan="3">
+						<input type="text" name="title">
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						留言人
+					</td>
+					<td colspan="3">
+						<input type="text" name="author">
+						<input type="hidden" name="ip" value="192.168.0.5">
+						<input type="hidden" name="addtime" value="4444444">
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						留言内容
+					</td>
+					<td colspan="3">
+						<textarea name="content"></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						提交
+					</td>
+					<td colspan="3">
+						<input type="button" id="btn" value="发表">
+					</td>
+				</tr>
+			</table>
+		</box1>
+	</div>
+</body>
+	<script>
+		var btn = $('#btn');
+		btn.click(function(){
+			//获取即将要添加的内容（标题、留言人、留言IP、留言时间、留言内容）
+			var title = $("input[name='title']").val();
+			var author = $("input[name='author']").val();
+			var ip = $("input[name='ip']").val();
+			var addtime = $("input[name='addtime']").val();
+			var content = $("textarea[name='content']").val();
+			//ajax提交到后台：使用当前控制器下的add方法，将标题、留言人、留言IP、留言时间、留言内容提交到后台，设置函数处理返回结果
+			$.post("__URL__/add", { 'title':title , 'author':author , 'ip':ip , 'addtime':addtime , 'content':content},
+				function(data){
+					// 如果返回的是0，说明其中一个栏目没填
+					if(0 == data){
+						alert('请填完所有需要填的栏目');
+					}else{
+						// 返回的数据是json格式的字符串，需要用eval()使他变成js对象
+						// var aaaaa = ([{"id":"34","title":"qqqqq","author":"wwwww","ip":"192.168.0.5","addtime":"4444444","content":"eeeeeeee"}]);
+						console.log(data);
+						arr = (eval('('+data+')'));
+						console.log(arr);
+						// 定义一个将要生成的新行
+						var newRow = null;
+						$.each(arr,function(idx,item){
+							// 拼装赋值给新行
+							newRow = '<tr><td id="sid">'+item.id+'</td><td>'+item.title+'</td><td>'+item.author+'</td><td>'+item.ip+'</td><td>'+item.addtime+'</td><td>'+item.content+'</td><td><input type="button" onclick="del(this)" value="删除"></td></tr>';
+						   //追加到表格
+						   // append() 方法在被选元素的结尾（仍然在内部）插入指定内容。
+						   $('#tab').append(newRow);
+						})
+					}
+				}
+			);
+		});
+		function del(obj){
+			// console.log(obj);
+			// 所选删除按钮的父级，带有id属性为sid的标签的html内容复制给delid
+			// $(obj)将js对象转化成jq对象
+			var delid = $(obj).parent().siblings("#sid").html();
+			// console.log($(obj));
+			// ajax提交到后台：使用当前控制器下的del方法，讲所要删除的id传到后台
+			$.post("__URL__/del", {'sid':delid},
+				function(data){
+					//删除失败会返回0，sid没传过去，也返回0
+					if(0 == data){
+						alert('删除失败');
+					}else{
+						alert('删除成功');
+						// 删除掉当前删除按钮的父级的父级（tr标签）
+						$(obj).parent().parent().remove();
+					}
+				}
+			);
+		}
+	</script>
+</html>
